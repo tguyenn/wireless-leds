@@ -1,0 +1,171 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NE555DR
+D Single Precision Timer
+K
+F http://www.ti.com/lit/ds/symlink/ne555.pdf
+$ENDCMP
+#
+$CMP MCP3204T-CI_ST
+D 12-bit resolution  +/- 1 LSB max DNL  +/- 1 LSB max INL (MCP3204/3208-B)  +/- 2 LSB max INL (MCP3204/3208-C)  4 (MCP3204) or 8 (MCP3208) input channels  Analog inputs programmable as single-ended or pseudo-differential pairs  On-chip sample and hold  SPI serial interface (modes 0,0 and 1,1)  Single supply operation: 2.7V - 5.5V  100 ksps max. sampling rate at VDD = 5V  50 ksps max. sampling rate at VDD = 2.7V  Low power CMOS technology: - 500 nA typical standby current, 2 A max. - 400 A
+K
+F 
+$ENDCMP
+#
+$CMP AH49HNTR-G1
+D Board Mount Hall Effect / Magnetic Sensors Linear Hall Sensor 3mA 3 to 8V
+K
+F https://www.diodes.com//assets/Datasheets/AH49H.pdf
+$ENDCMP
+#
+$CMP LM4041CILPR
+D Voltage References Adj Prec Micropwr Shunt Vltg Ref
+K
+F https://www.ti.com/general/docs/suppproductinfo.tsp?distId=26&gotoUrl=https://www.ti.com/lit/gpn/lm4041a12
+$ENDCMP
+#
+$CMP CD74HC4067SM96
+D High Speed CMOS 16-Ch MUX/DEMUX 24P SOIC CD74HC4067SM96, Multiplexer/Demultiplexer Single 16:1, 3 V, 5 V, 24-Pin, SSOP, 1
+K
+F https://datasheet.datasheetarchive.com/originals/distributors/SFDatasheet-6/sf-000127204.pdf
+$ENDCMP
+#
+$CMP ADC081S021CIMF_NOPB
+D Single Channel, 50 to 200 ksps, 8-Bit A/D Converter
+K
+F http://www.ti.com/lit/gpn/adc081s021
+$ENDCMP
+#
+$CMP ADC121S021CIMFX_NOPB
+D Single Channel, 50 to 200 ksps, 12-Bit A/D Converter
+K
+F http://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=http%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Fadc121s021
+$ENDCMP
+#
+$CMP UJC-H-G-SMT-1-P6-TR
+D Type C, Power Only, 5 Vdc, 5 A, Vertical, Surface Mount w/ Anchor Pins, SMT Contacts, Gold Flash, 6 Pins, USB Receptacle
+K
+F https://www.sameskydevices.com/product/interconnect/connectors/usb-connectors/ujc-h-g-smt-1-p6-tr?srsltid=AfmBOoq0MAximae-I4xzV8cRqJrN6l5eTM0me0MutqXnan0TguB6mMwJ
+$ENDCMP
+#
+$CMP SN74HC157NSR
+D Quadruple 2-Line To 1-Line Data Selectors/Multiplexers
+K
+F http://www.ti.com/lit/gpn/sn74hc157
+$ENDCMP
+#
+$CMP MCP3221A5T-E_OT
+D A/D Converter 12-Bit I2C 22ksps SOT23-5
+K
+F https://datasheet.datasheetarchive.com/originals/distributors/SFDatasheet-4/sf-00090069.pdf
+$ENDCMP
+#
+$CMP LS_R976-NR-1
+D Standard LEDs - SMD Super Red, 633nm 180mcd, 20mA
+K
+F https://datasheet.datasheetarchive.com/originals/distributors/DKDS-18/344792.pdf
+$ENDCMP
+#
+$CMP 373
+D Adafruit Accessories 2.1mm DC Barrel Jack Breadboard Friendly
+K
+F https://cdn-shop.adafruit.com/datasheets/21mmdcjackDatasheet.pdf
+$ENDCMP
+#
+$CMP LM2937ET-3.3_NOPB
+D 400mA and 500mA Voltage Regulator
+K
+F http://www.ti.com/general/docs/suppproductinfo.tsp?distId=10&gotoUrl=http%3A%2F%2Fwww.ti.com%2Flit%2Fgpn%2Flm2937
+$ENDCMP
+#
+$CMP M0L1306QDGS32RQ1
+D ARM Microcontrollers - MCU Automotive 32-Mhz Ar m Cortex-M0+ with 64
+K
+F https://www.ti.com/lit/ds/symlink/mspm0l1306-q1.pdf?ts=1763609373324
+$ENDCMP
+#
+$CMP SN74AHCT125DBR
+D Quadruple Bus Buffer Gates With 3-State Outputs
+K
+F http://www.ti.com/lit/gpn/sn74ahct125
+$ENDCMP
+#
+$CMP NX3020NAK-QR
+D 30 V, N-channel Trench MOSFET
+K
+F https://assets.nexperia.com/documents/data-sheet/NX3020NAK.pdf
+$ENDCMP
+#
+$CMP SN74LV1T34DBVR
+D Single Power Supply BUFFER Logic Level Shifter (no enable)
+K
+F http://www.ti.com/lit/gpn/sn74lv1t34
+$ENDCMP
+#
+$CMP LM321LVIDBVR
+D 1-Channel Industry Standard Low Voltage Operational Amplifier
+K
+F http://www.ti.com/lit/gpn/lm321lv
+$ENDCMP
+#
+$CMP MSPM0G3507SDGS28R
+D ARM Microcontrollers - MCU 80MHz Arm M0+ MCU, 128KB Flash, 32KB SRAM, 212bit 4Msps ADC, DAC, 3COMP, 3op-amp, CAN-FD, MATHACL
+K
+F https://www.ti.com/lit/ds/symlink/mspm0g3507.pdf
+$ENDCMP
+#
+$CMP SC0914_13_
+D ARM Cortex-M0+ - Microcontroller IC 32-Bit Dual-Core 133MHz External Program Memory 56-QFN (7x7)
+K
+F https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf
+$ENDCMP
+#
+$CMP AT25SF041B-SSHB-B
+D The AT25SF041B is a member of our standard class code and data storage solutions designed for 3V systems in which program code is shadowed from Flash memory into embedded or external RAM for execution.The architecture includes erase block sizes that are optimized to meet the needs of today's code and data storage applications and three security register pages for unique device serialization, system-level Electronic Serial Number (ESN) storage, locked key storage, etc.	Universally compatible pinout and comma
+K
+F https://www.renesas.com/us/en/products/memory-logic/non-volatile-memory/spi-nor-flash/dual-quad-spi-memory/at25sf041b-4mbit-27v-minimum-spi-serial-flash-memory-dual-io-support
+$ENDCMP
+#
+$CMP PI4IOE5V9537UEX
+D 4-bit I2C-bus and SMBus low power I/O port with interrupt and reset
+K
+F https://www.diodes.com/assets/Datasheets/PI4IOE5V9537.pdf
+$ENDCMP
+#
+$CMP PCM1780DBQR
+D 106dB SNR Stereo DAC (S/W Control)
+K
+F http://www.ti.com/lit/gpn/PCM1780
+$ENDCMP
+#
+$CMP W25Q128JVSIQ
+D 128M-bit Serial Flash Memory with uniform 4KB sectors and Dual/Quad SPI
+K
+F https://www.winbond.com/hq/search-resource-file.jsp?partNo=W25Q128JVSIQ&type=datasheet
+$ENDCMP
+#
+$CMP AP64060TQWU-7
+D 4.5V TO 40V INPUT, 600mA SYNCHRONOUS BUCK WITH ENHANCED EMI REDUCTION, -40C to +125C
+K
+F https://www.diodes.com/datasheet/download/AP64060Q_AP64060TQ_AP64060ZQ.pdf
+$ENDCMP
+#
+$CMP LMLP07A7M100DTAS
+D Fixed Inductors 10uH DCR= 68mOhm 20% 07A7
+K
+F https://www.mouser.es/datasheet/2/40/LMLPD-1774090.pdf
+$ENDCMP
+#
+$CMP TPD3E001DRLR
+D Low-Capacitance 3-Channel +/-15KV ESD-Protection Array for High-Speed Data Interfaces
+K
+F http://www.ti.com/lit/ds/symlink/tpd3e001.pdf
+$ENDCMP
+#
+$CMP AT25FF161A-SHN-B
+D The AT25FF161A is a member of our Standard class code and data storage solutions and is ideally suited for systems that need fast Read performance and low Sleep power for boot/code shadowing and Execute-in-Place tasks. Its low power consumption and wide operating voltage range are optimized for battery-powered designs.
+K
+F https://www.renesas.com/us/en/products/memory-logic/non-volatile-memory/spi-nor-flash/dual-quad-spi-memory/at25ff161a-16mbit-165-v-36-v-spi-serial-flash-memory-multi-io-support
+$ENDCMP
+#
+#End Doc Library
