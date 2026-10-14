@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>wireless-leds</name>
+	<name>blink_led</name>
 	<comment></comment>
 	<projects>
+		<project>freertos_builds_LP_MSPM0G3507_release_ticlang</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
