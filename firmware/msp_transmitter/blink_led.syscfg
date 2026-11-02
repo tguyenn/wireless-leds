@@ -1,0 +1,35 @@
+/**
+ * @cliArgs --device "MSPM0G3507" --package "LQFP-64(PM)" --product "mspm0_sdk@2.11.00.07"
+ * @versions {"tool":"1.26.2+4477"}
+ */
+const SPI = scripting.addModule("/ti/driverlib/SPI", {}, false);
+const radio = SPI.addInstance();
+radio.$name = "SPI_0";
+radio.frameFormat = "MOTO3"; // Software controls NSS; full-duplex SCLK/MOSI/MISO.
+radio.targetBitRate = 100000; // Conservative bring-up rate for jumper wiring.
+radio.peripheral.$assign = "SPI0";
+radio.peripheral.sclkPin.$assign = "PA12";
+radio.peripheral.mosiPin.$assign = "PB17";
+radio.peripheral.misoPin.$assign = "PA13";
+const UART = scripting.addModule("/ti/driverlib/UART", {}, false);
+const terminal = UART.addInstance();
+terminal.$name = "UART_0";
+terminal.targetBaudRate = 115200;
+terminal.peripheral.$assign = "UART0";
+terminal.peripheral.txPin.$assign = "PA10";
+terminal.peripheral.rxPin.$assign = "PA11";
+// PA0 (onboard LED1) is also initialized in C.
+// PB0 (TX NSS) and PB1 (RX NSS) are initialized in C. Radio RST is unused.
+// Do not enable unused-pin termination or assign these pins elsewhere.
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+SYSCTL.clockTreeEn = true;
+const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
+Board.peripheral.$assign = "DEBUGSS";
+Board.peripheral.swclkPin.$assign = "PA20";
+Board.peripheral.swdioPin.$assign = "PA19";
+const ProjectConfig = scripting.addModule("/ti/project_config/ProjectConfig");
+ProjectConfig.genDisable = true;
+
+
+
+
