@@ -1230,6 +1230,16 @@
 		)
 		(uuid "c97896f8-642b-458f-8e67-0faa343bda92")
 	)
+	(text "TODO: check if we need to add a series termination resistor for this data line"
+		(exclude_from_sim no)
+		(at 114.046 83.566 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "f8b734b5-630d-44f1-a6b6-0d5193d6507a")
+	)
 	(junction
 		(at 66.04 41.91)
 		(diameter 0)

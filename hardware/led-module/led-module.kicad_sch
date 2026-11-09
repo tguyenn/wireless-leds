@@ -681,7 +681,7 @@
 				(justify left top)
 			)
 		)
-		(pin "LORA_DIO[0..5]" output
+		(pin "LORA_DIO[0..3]" output
 			(at 116.84 104.14 180)
 			(uuid "1aab3d3b-0871-48ea-996c-422f5c840580")
 			(effects
@@ -807,7 +807,7 @@
 				(justify right)
 			)
 		)
-		(pin "LORA_DIO[0..5]" input
+		(pin "LORA_DIO[0..3]" input
 			(at 101.6 104.14 0)
 			(uuid "715e4e95-56fa-4d00-906c-675cece8ad23")
 			(effects

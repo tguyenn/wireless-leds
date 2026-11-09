@@ -1916,6 +1916,12 @@
 		(uuid "223c297b-04dd-4b8b-b014-86258f3fbe36")
 	)
 	(junction
+		(at 30.48 40.64)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "501ec844-45f4-43a0-8bf1-56a976840305")
+	)
+	(junction
 		(at 22.86 40.64)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2016,6 +2022,16 @@
 			(type default)
 		)
 		(uuid "45faf4d9-0f26-4e93-b6ca-61cab81f23b7")
+	)
+	(wire
+		(pts
+			(xy 30.48 40.64) (xy 39.37 40.64)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4971473d-f63e-476c-9fea-ea868bcdc2c8")
 	)
 	(wire
 		(pts
@@ -2406,6 +2422,95 @@
 			(project "led-module"
 				(path "/44898609-eea8-4fe1-a778-b824d7a642ed/4e00d9bd-3b20-4f7d-b8a4-6c66a4b4a833"
 					(reference "#PWR05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint")
+		(at 39.37 40.64 180)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "2a2b29c0-a94a-4d1c-8a89-37ac1a3d7939")
+		(property "Reference" "TP6"
+			(at 44.958 42.418 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "GND"
+			(at 45.466 44.45 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "SamacSys_Parts:bettertestpoint2"
+			(at 34.29 40.64 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 34.29 40.64 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "test point"
+			(at 39.37 40.64 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Field5" ""
+			(at 39.37 40.64 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c97a53c2-71ba-416f-9a57-6a4067687caa")
+		)
+		(instances
+			(project "led-module"
+				(path "/44898609-eea8-4fe1-a778-b824d7a642ed/4e00d9bd-3b20-4f7d-b8a4-6c66a4b4a833"
+					(reference "TP6")
 					(unit 1)
 				)
 			)
