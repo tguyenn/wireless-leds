@@ -168,4 +168,16 @@ K
 F https://www.renesas.com/us/en/products/memory-logic/non-volatile-memory/spi-nor-flash/dual-quad-spi-memory/at25ff161a-16mbit-165-v-36-v-spi-serial-flash-memory-multi-io-support
 $ENDCMP
 #
+$CMP 4269
+D Adafruit Accessories Simple Spring Antenna - 915MHz 915MHz LoRa Helical RF Antenna 910MHz ~ 920MHz 2.15dBi Solder Through Hole
+K
+F https://cdn-shop.adafruit.com/product-files/4269/P4269_915-2.5A-9T.pdf
+$ENDCMP
+#
+$CMP USB3076-30-A
+D USB - micro B USB 2.0 Receptacle Connector 5 Position Surface Mount, Right Angle; Through Hole
+K
+F https://gct.co/connector/usb3076
+$ENDCMP
+#
 #End Doc Library

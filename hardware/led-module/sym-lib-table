@@ -1,0 +1,5 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "ECE445L") (type "KiCad") (uri "${KIPRJMOD}/../libraries/445Lsymbols") (options "") (descr ""))
+	(lib (name "SamacSys_Parts") (type "KiCad") (uri "${KIPRJMOD}/../libraries/SamacSys_Parts.kicad_sym") (options "") (descr ""))
+)

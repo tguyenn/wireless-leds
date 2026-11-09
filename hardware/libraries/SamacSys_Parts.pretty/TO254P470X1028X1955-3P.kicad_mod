@@ -25,7 +25,7 @@
   (pad 1 thru_hole rect (at 0 0) (size 1.935 1.935) (drill 1.29) (layers *.Cu *.Mask))
   (pad 2 thru_hole circle (at 2.54 0) (size 1.935 1.935) (drill 1.29) (layers *.Cu *.Mask))
   (pad 3 thru_hole circle (at 5.08 0) (size 1.935 1.935) (drill 1.29) (layers *.Cu *.Mask))
-  (model "C:\\Users\\tobya\\Desktop\\ECE445L\\lab-7-and-10-rasists\\hardware\\libraries\\SamacSys_Parts.3dshapes\\LM2937ET-3.3_NOPB.stp"
+  (model "C:\\Users\\tobya\\Desktop\\Personal_Projects\\wireless-leds\\hardware\\libraries\\SamacSys_Parts.3dshapes\\LM2937ET-3.3_NOPB.stp"
     (at (xyz 0 0 0))
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))
