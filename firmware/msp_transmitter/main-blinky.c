@@ -4,9 +4,6 @@
  */
 #include <stdbool.h>
 #include <stdint.h>
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
 #include "ti_msp_dl_config.h"
 
 #ifndef RADIO_FREQUENCY_HZ
@@ -30,31 +27,52 @@
 #define CRC_OK 0x02
 #define FIFO_OVERRUN 0x10
 
-static SemaphoreHandle_t spiMutex;
-static TaskHandle_t rxTaskHandle;
+static volatile uint32_t elapsedMs;
 /* Inspect these counters in CCS; UART reports received data and a heartbeat. */
 volatile uint32_t radioTxPackets;
 volatile uint32_t radioRxPackets;
 volatile uint32_t radioRxOverruns;
 
+void SysTick_Handler(void)
+{
+    ++elapsedMs;
+}
+
+static bool uartByte(uint8_t value)
+{
+    /* A wedged UART must not prevent radio startup or packet reception. */
+    uint32_t budget = 100000;
+    while (DL_UART_Main_isTXFIFOFull(UART_0_INST)) {
+        if (--budget == 0) return false;
+    }
+    DL_UART_Main_transmitData(UART_0_INST, value);
+    return true;
+}
+
 static void uartText(const char *text)
 {
-    while (*text) DL_UART_Main_transmitDataBlocking(UART_0_INST, (uint8_t)*text++);
+    while (*text) {
+        if (!uartByte((uint8_t)*text++)) return;
+    }
 }
 
 static void uartHex(uint8_t value)
 {
     static const char hex[] = "0123456789ABCDEF";
-    DL_UART_Main_transmitDataBlocking(UART_0_INST, hex[value >> 4]);
-    DL_UART_Main_transmitDataBlocking(UART_0_INST, hex[value & 0x0F]);
+    char text[] = {hex[value >> 4], hex[value & 0x0F], '\0'};
+    uartText(text);
 }
 
 static void fatal(const char *message)
 {
-    taskDISABLE_INTERRUPTS();
     DL_GPIO_setPins(GPIOB, TX_CS | RX_CS);
-    uartText(message);
-    for (;;) {}
+    for (;;) {
+        uartText(message);
+        DL_GPIO_clearPins(GPIOA, HEARTBEAT_LED);
+        delay_cycles(CPUCLK_FREQ / 8);
+        DL_GPIO_setPins(GPIOA, HEARTBEAT_LED);
+        delay_cycles(7 * (CPUCLK_FREQ / 8));
+    }
 }
 
 /* Every transmitted SPI byte also receives a byte: always drain RX FIFO. */
@@ -72,10 +90,6 @@ static uint8_t radioRegister(uint32_t cs, uint8_t address, uint8_t value)
 {
     uint32_t budget = 100000;
     uint8_t result;
-    /* Priority inheritance bounds the higher-priority TX task's bus wait.
-     * Never hold this mutex while waiting for RF events or writing UART. */
-    if (xSemaphoreTake(spiMutex, portMAX_DELAY) != pdTRUE)
-        fatal("\r\nERROR: SPI mutex\r\n");
     DL_GPIO_setPins(GPIOB, TX_CS | RX_CS);
     delay_cycles(CPUCLK_FREQ / 1000000); // >= 1 us NSS high/setup/hold
     DL_GPIO_clearPins(GPIOB, cs);
@@ -87,7 +101,6 @@ static uint8_t radioRegister(uint32_t cs, uint8_t address, uint8_t value)
     }
     delay_cycles(CPUCLK_FREQ / 1000000);
     DL_GPIO_setPins(GPIOB, cs);
-    xSemaphoreGive(spiMutex);
     return result;
 }
 
@@ -145,11 +158,11 @@ static bool probeRadio(uint32_t cs)
 
 static bool waitFlag(uint32_t cs, uint8_t reg, uint8_t mask)
 {
-    TickType_t start = xTaskGetTickCount();
+    uint32_t start = elapsedMs;
     do {
         if ((readReg(cs, reg) & mask) == mask) return true;
-        vTaskDelay(pdMS_TO_TICKS(1));
-    } while ((TickType_t)(xTaskGetTickCount() - start) < pdMS_TO_TICKS(100));
+        delay_cycles(CPUCLK_FREQ / 1000);
+    } while (elapsedMs - start < 100);
     return false;
 }
 
@@ -157,13 +170,10 @@ static void setMode(uint32_t cs, uint8_t mode)
 {
     writeReg(cs, REG_OPMODE, mode); // sequencer on, Listen off
     if (!waitFlag(cs, REG_IRQ1, MODE_READY)) {
-        /* Take all SPI snapshots before disabling interrupts: SPI uses an
-         * RTOS mutex. Freeze task output only after releasing the bus. */
         uint8_t version = readReg(cs, REG_VERSION);
         uint8_t actualMode = readReg(cs, REG_OPMODE);
         uint8_t irq1 = readReg(cs, REG_IRQ1);
         uint8_t irq2 = readReg(cs, REG_IRQ2);
-        taskDISABLE_INTERRUPTS();
         uartText(cs == TX_CS ? "\r\nERROR: TX ModeReady" :
                                "\r\nERROR: RX ModeReady");
         uartText(" requested=0x"); uartHex(mode);
@@ -222,74 +232,55 @@ static void configureRadio(uint32_t cs)
         fatal("\r\nERROR: radio register readback\r\n");
 }
 
-static void transmitter(void *argument)
+static void initRadios(void)
 {
-    static const char message[] = "HELLO WORLD";
-    unsigned index = 0;
-    (void)argument;
     /* RST is not controlled by the MCU. On Adafruit #3070, tie breakout RST
      * to GND: its pull-up otherwise holds the radio in reset. Allow power-on
      * reset to settle; power-cycle the radios for a fresh hardware reset. */
-    vTaskDelay(pdMS_TO_TICKS(20));
+    delay_cycles(CPUCLK_FREQ / 50);
     // Probe both even if TX fails, so one log compares both hardware paths.
     bool txBusOK = probeRadio(TX_CS);
     bool rxBusOK = probeRadio(RX_CS);
-    if (!txBusOK || !rxBusOK)
-        fatal("ERROR: SPI register test failed; radio initialization stopped\r\n");
+    if (!txBusOK && !rxBusOK)
+        fatal("ERROR: TX and RX SPI tests failed\r\n");
+    if (!txBusOK)
+        fatal("ERROR: TX SPI test failed (PB0)\r\n");
+    if (!rxBusOK)
+        fatal("ERROR: RX SPI test failed (PB1)\r\n");
     configureRadio(TX_CS);
     configureRadio(RX_CS);
     setMode(RX_CS, MODE_RX);
-    setMode(TX_CS, MODE_TX);
     uartText("RFM69HCW ready; received characters follow:\r\n");
-    xTaskNotifyGive(rxTaskHandle);
-    for (;;) {
-        // Standby clears PacketSent and prevents starting on a partial FIFO.
-        setMode(TX_CS, MODE_STANDBY);
-        writeReg(TX_CS, REG_FIFO, (uint8_t)message[index]);
-        setMode(TX_CS, MODE_TX);
-        if (!waitFlag(TX_CS, REG_IRQ2, PACKET_SENT))
-            fatal("\r\nERROR: TX PacketSent timeout\r\n");
-        ++radioTxPackets;
-        setMode(TX_CS, MODE_STANDBY);
-        index = (index + 1) % (sizeof(message) - 1);
-        // At least 50 ms of idle time after each completed character packet.
-        vTaskDelay(pdMS_TO_TICKS(50) + 1);
-    }
 }
 
-static void receiver(void *argument)
+static void sendCharacter(uint8_t character)
 {
-    TickType_t lastHeartbeat;
-    const TickType_t heartbeatPeriod = pdMS_TO_TICKS(1000);
-    (void)argument;
-    (void)ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-    lastHeartbeat = xTaskGetTickCount();
-    for (;;) {
-        uint8_t flags = readReg(RX_CS, REG_IRQ2);
-        if (flags & FIFO_OVERRUN) {
-            ++radioRxOverruns;
-            writeReg(RX_CS, REG_IRQ2, FIFO_OVERRUN);
-            writeReg(RX_CS, REG_PACKET2, 0x06); // restart RX, keep auto-restart
-        } else if ((flags & (PAYLOAD_READY | CRC_OK)) == (PAYLOAD_READY | CRC_OK)) {
-            uint8_t character = readReg(RX_CS, REG_FIFO);
-            ++radioRxPackets;
-            DL_UART_Main_transmitDataBlocking(UART_0_INST, character);
-        }
-        /* This task owns normal UART output, so heartbeat bytes cannot
-         * interleave with received bytes. TX retains its higher priority. */
-        TickType_t now = xTaskGetTickCount();
-        if ((TickType_t)(now - lastHeartbeat) >= heartbeatPeriod) {
-            lastHeartbeat += heartbeatPeriod;
-            uartText("\r\nalive\r\n");
-            DL_GPIO_togglePins(GPIOA, HEARTBEAT_LED);
-        }
-        vTaskDelay(pdMS_TO_TICKS(1));
+    writeReg(TX_CS, REG_FIFO, character);
+    setMode(TX_CS, MODE_TX);
+    if (!waitFlag(TX_CS, REG_IRQ2, PACKET_SENT))
+        fatal("\r\nERROR: TX PacketSent timeout\r\n");
+    ++radioTxPackets;
+    setMode(TX_CS, MODE_STANDBY);
+}
+
+static void pollReceiver(void)
+{
+    uint8_t flags = readReg(RX_CS, REG_IRQ2);
+    if (flags & FIFO_OVERRUN) {
+        ++radioRxOverruns;
+        writeReg(RX_CS, REG_IRQ2, FIFO_OVERRUN);
+        writeReg(RX_CS, REG_PACKET2, 0x06); // restart RX, keep auto-restart
+    } else if ((flags & (PAYLOAD_READY | CRC_OK)) == (PAYLOAD_READY | CRC_OK)) {
+        uint8_t character = readReg(RX_CS, REG_FIFO);
+        ++radioRxPackets;
+        uartText("Received: ");
+        (void)uartByte(character);
+        uartText("\r\n");
     }
 }
 
 void main_radio(void)
 {
-    uartText("\r\nRFM69 demo: SPI diagnostics v3; MOSI=PB17; SPI=100kHz; RST unused\r\n");
     // PA0 is open-drain; initialize LED1 off before enabling its output.
     DL_GPIO_setPins(GPIOA, HEARTBEAT_LED);
     DL_GPIO_initDigitalOutput(IOMUX_PINCM1);
@@ -299,14 +290,30 @@ void main_radio(void)
     DL_GPIO_initDigitalOutput(IOMUX_PINCM12); // PB0
     DL_GPIO_initDigitalOutput(IOMUX_PINCM13); // PB1
     DL_GPIO_enableOutput(GPIOB, TX_CS | RX_CS);
-    spiMutex = xSemaphoreCreateMutex();
-    if (!spiMutex) fatal("ERROR: SPI mutex allocation\r\n");
-    if (xTaskCreate(receiver, "RadioRX", configMINIMAL_STACK_SIZE, NULL,
-                    tskIDLE_PRIORITY + 1, &rxTaskHandle) != pdPASS ||
-        xTaskCreate(transmitter, "RadioTX", configMINIMAL_STACK_SIZE, NULL,
-                    tskIDLE_PRIORITY + 2, NULL) != pdPASS)
-        fatal("ERROR: task allocation\r\n");
-    vTaskStartScheduler();
-    fatal("ERROR: scheduler allocation\r\n");
+    uartText("\r\nRFM69 demo: UART ready, starting SPI diagnostics\r\n");
+    if (SysTick_Config(CPUCLK_FREQ / 1000) != 0)
+        fatal("ERROR: SysTick setup\r\n");
+    initRadios();
+
+    static const char message[] = "HELLO";
+    unsigned index = 0;
+    uint32_t lastHeartbeat = elapsedMs;
+    uint32_t lastPacket = lastHeartbeat - 51;
+    for (;;) {
+        pollReceiver();
+        uint32_t now = elapsedMs;
+        if (now - lastHeartbeat >= 1000) {
+            lastHeartbeat = now;
+            uartText("\r\nalive\r\n");
+            DL_GPIO_togglePins(GPIOA, HEARTBEAT_LED);
+        }
+        if (now - lastPacket >= 51) {
+            sendCharacter((uint8_t)message[index]);
+            index = (index + 1) % (sizeof(message) - 1);
+            // A 51-tick gap gives at least 50 ms in standby after each packet.
+            lastPacket = elapsedMs;
+        }
+        delay_cycles(CPUCLK_FREQ / 1000);
+    }
 }
 
