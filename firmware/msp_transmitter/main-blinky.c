@@ -2,30 +2,11 @@
  * Register definitions: docs/RFM69HCW-V1.1.pdf, sections 5, 6 and 7.2.2.
  * This is FSK packet mode, not LoRa. One ASCII byte per fixed-length packet.
  */
-#include <stdbool.h>
-#include <stdint.h>
-#include "ti_msp_dl_config.h"
+#include "rfm69.h"
 
 #ifndef RADIO_FREQUENCY_HZ
 #define RADIO_FREQUENCY_HZ 915000000UL
 #endif
-#define TX_CS DL_GPIO_PIN_0
-#define RX_CS DL_GPIO_PIN_1
-#define HEARTBEAT_LED DL_GPIO_PIN_0 // PA0: active-low onboard red LED1
-#define REG_FIFO 0x00
-#define REG_OPMODE 0x01
-#define REG_VERSION 0x10
-#define REG_IRQ1 0x27
-#define REG_IRQ2 0x28
-#define REG_PACKET2 0x3D
-#define MODE_STANDBY 0x04
-#define MODE_TX 0x0C
-#define MODE_RX 0x10
-#define MODE_READY 0x80
-#define PACKET_SENT 0x08
-#define PAYLOAD_READY 0x04
-#define CRC_OK 0x02
-#define FIFO_OVERRUN 0x10
 
 static volatile uint32_t elapsedMs;
 /* Inspect these counters in CCS; UART reports received data and a heartbeat. */
@@ -38,7 +19,7 @@ void SysTick_Handler(void)
     ++elapsedMs;
 }
 
-static bool uartByte(uint8_t value)
+bool uartByte(uint8_t value)
 {
     /* A wedged UART must not prevent radio startup or packet reception. */
     uint32_t budget = 100000;
@@ -49,21 +30,21 @@ static bool uartByte(uint8_t value)
     return true;
 }
 
-static void uartText(const char *text)
+void uartText(const char *text)
 {
     while (*text) {
         if (!uartByte((uint8_t)*text++)) return;
     }
 }
 
-static void uartHex(uint8_t value)
+void uartHex(uint8_t value)
 {
     static const char hex[] = "0123456789ABCDEF";
     char text[] = {hex[value >> 4], hex[value & 0x0F], '\0'};
     uartText(text);
 }
 
-static void fatal(const char *message)
+void fatal(const char *message)
 {
     DL_GPIO_setPins(GPIOB, TX_CS | RX_CS);
     for (;;) {
@@ -76,7 +57,7 @@ static void fatal(const char *message)
 }
 
 /* Every transmitted SPI byte also receives a byte: always drain RX FIFO. */
-static uint8_t spiByte(uint8_t value)
+uint8_t spiByte(uint8_t value)
 {
     uint32_t budget = 100000;
     DL_SPI_transmitData8(SPI_0_INST, value);
@@ -104,12 +85,12 @@ static uint8_t radioRegister(uint32_t cs, uint8_t address, uint8_t value)
     return result;
 }
 
-static uint8_t readReg(uint32_t cs, uint8_t address)
+uint8_t readReg(uint32_t cs, uint8_t address)
 {
     return radioRegister(cs, address & 0x7F, 0);
 }
 
-static void writeReg(uint32_t cs, uint8_t address, uint8_t value)
+void writeReg(uint32_t cs, uint8_t address, uint8_t value)
 {
     (void)radioRegister(cs, address | 0x80, value);
 }
@@ -156,17 +137,22 @@ static bool probeRadio(uint32_t cs)
     return passed;
 }
 
-static bool waitFlag(uint32_t cs, uint8_t reg, uint8_t mask)
+bool waitFlagFor(uint32_t cs, uint8_t reg, uint8_t mask, uint32_t timeoutMs)
 {
     uint32_t start = elapsedMs;
     do {
         if ((readReg(cs, reg) & mask) == mask) return true;
         delay_cycles(CPUCLK_FREQ / 1000);
-    } while (elapsedMs - start < 100);
+    } while (elapsedMs - start < timeoutMs);
     return false;
 }
 
-static void setMode(uint32_t cs, uint8_t mode)
+static bool waitFlag(uint32_t cs, uint8_t reg, uint8_t mask)
+{
+    return waitFlagFor(cs, reg, mask, 100);
+}
+
+void setMode(uint32_t cs, uint8_t mode)
 {
     writeReg(cs, REG_OPMODE, mode); // sequencer on, Listen off
     if (!waitFlag(cs, REG_IRQ1, MODE_READY)) {
@@ -185,7 +171,7 @@ static void setMode(uint32_t cs, uint8_t mode)
     }
 }
 
-static void configureRadio(uint32_t cs)
+void configureRadio(uint32_t cs, bool verbose)
 {
     static const struct { uint8_t reg, value; } settings[] = {
         {0x02, 0x00}, // packet mode, FSK, no shaping
@@ -215,9 +201,11 @@ static void configureRadio(uint32_t cs)
     };
     uint32_t frf = (uint32_t)(((uint64_t)RADIO_FREQUENCY_HZ << 19) / 32000000UL);
     uint8_t version = readReg(cs, REG_VERSION);
-    uartText(cs == TX_CS ? "TX RegVersion=0x" : "RX RegVersion=0x");
-    uartHex(version);
-    uartText(" (expected 0x24)\r\n");
+    if (verbose) {
+        uartText(cs == TX_CS ? "TX RegVersion=0x" : "RX RegVersion=0x");
+        uartHex(version);
+        uartText(" (expected 0x24)\r\n");
+    }
     if (version != 0x24)
         fatal(cs == TX_CS ? "\r\nERROR: TX RegVersion (check wiring/power)\r\n" :
                             "\r\nERROR: RX RegVersion (check wiring/power)\r\n");
@@ -247,8 +235,8 @@ static void initRadios(void)
         fatal("ERROR: TX SPI test failed (PB0)\r\n");
     if (!rxBusOK)
         fatal("ERROR: RX SPI test failed (PB1)\r\n");
-    configureRadio(TX_CS);
-    configureRadio(RX_CS);
+    configureRadio(TX_CS, true);
+    configureRadio(RX_CS, true);
     setMode(RX_CS, MODE_RX);
     uartText("RFM69HCW ready; received characters follow:\r\n");
 }
@@ -279,7 +267,7 @@ static void pollReceiver(void)
     }
 }
 
-void main_radio(void)
+void radioBoardInit(void)
 {
     // PA0 is open-drain; initialize LED1 off before enabling its output.
     DL_GPIO_setPins(GPIOA, HEARTBEAT_LED);
@@ -290,9 +278,14 @@ void main_radio(void)
     DL_GPIO_initDigitalOutput(IOMUX_PINCM12); // PB0
     DL_GPIO_initDigitalOutput(IOMUX_PINCM13); // PB1
     DL_GPIO_enableOutput(GPIOB, TX_CS | RX_CS);
-    uartText("\r\nRFM69 demo: UART ready, starting SPI diagnostics\r\n");
     if (SysTick_Config(CPUCLK_FREQ / 1000) != 0)
         fatal("ERROR: SysTick setup\r\n");
+}
+
+void main_radio(void)
+{
+    radioBoardInit();
+    uartText("\r\nRFM69 demo: UART ready, starting SPI diagnostics\r\n");
     initRadios();
 
     static const char message[] = "HELLO";
